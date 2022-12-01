@@ -1,13 +1,7 @@
 module Main where
 
 import System.IO
-
-sort :: (Ord a) => [a] -> [a]
-sort [] = []
-sort (x : xs) =
-  let s = sort [a | a <- xs, a <= x]
-      b = sort [a | a <- xs, a > x]
-   in s ++ [x] ++ b
+import Data.List (sort)
 
 toCalories :: [String] -> [Integer]
 toCalories [] = []
