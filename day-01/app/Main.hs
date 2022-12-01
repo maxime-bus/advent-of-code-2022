@@ -4,27 +4,18 @@ import System.IO
 
 sort :: (Ord a) => [a] -> [a]
 sort [] = []
-sort (x:xs) = 
+sort (x : xs) =
   let s = sort [a | a <- xs, a <= x]
       b = sort [a | a <- xs, a > x]
-  in s ++ [x] ++ b
+   in s ++ [x] ++ b
 
-c :: [String] -> [Integer]
-c [] = []
-c ("":xs) = c xs
-c xs = sum (map read (takeWhile (/= "") xs)) : c (dropWhile (/= "") xs)
+toCalories :: [String] -> [Integer]
+toCalories [] = []
+toCalories ("" : xs) = toCalories xs
+toCalories xs = sum (map read (takeWhile (/= "") xs)) : toCalories (dropWhile (/= "") xs)
 
 main :: IO ()
-main = part2
-
-part1 :: IO ()
-part1 = do
-  handle <- openFile "input.txt" ReadMode
-  content <- hGetContents handle
-  print $ foldr max 0 (c $ lines content)
-
-part2 :: IO ()
-part2 = do
-  handle <- openFile "input.txt" ReadMode
-  content <- hGetContents handle
-  print $ sum $ take 3 $ reverse $ sort (c $ lines content)
+main = do
+  calories <- fmap (toCalories . lines) $ openFile "input.txt" ReadMode >>= hGetContents 
+  putStrLn ("Part 1 : " ++ show (maximum calories))
+  putStrLn ("Part 2 : " ++ show (sum $ take 3 $ reverse $ sort calories))
