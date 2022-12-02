@@ -3,9 +3,9 @@ module Main
   )
 where
 
-type PlayerShape = Shape
-
 type OpponentShape = Shape
+
+type ExpectedOutcome = RoundOutcome
 
 type PlayerScore = Integer
 
@@ -18,39 +18,45 @@ pointsFromOutcome Win = 6
 pointsFromOutcome Draw = 3
 pointsFromOutcome Loss = 0
 
-roundOutcome :: PlayerShape -> OpponentShape -> RoundOutcome
-roundOutcome Rock Scissors = Win
-roundOutcome Paper Rock = Win
-roundOutcome Scissors Paper = Win
-roundOutcome ps os
-  | ps == os = Draw
-  | otherwise = Loss
-
 pointsForShape :: Shape -> Integer
 pointsForShape Rock = 1
 pointsForShape Paper = 2
 pointsForShape Scissors = 3
 
 charToShape :: Char -> Maybe Shape
-charToShape s
-  | s == 'A' || s == 'X' = Just Rock
-  | s == 'B' || s == 'Y' = Just Paper
-  | s == 'C' || s == 'Z' = Just Scissors
-  | otherwise = Nothing
+charToShape 'A' = Just Rock
+charToShape 'B' = Just Paper
+charToShape 'C' = Just Scissors
+charToShape _ = Nothing
 
-parseLine :: String -> Maybe (PlayerShape, OpponentShape)
-parseLine [os, ' ', ps] = (,) <$> charToShape ps <*> charToShape os
+charToOutcome :: Char -> Maybe RoundOutcome
+charToOutcome 'X' = Just Loss
+charToOutcome 'Y' = Just Draw
+charToOutcome 'Z' = Just Win
+charToOutcome _ = Nothing
+
+expectedShape :: OpponentShape -> ExpectedOutcome -> Shape
+expectedShape Rock Win = Paper
+expectedShape Paper Win = Scissors
+expectedShape Scissors Win = Rock
+expectedShape Rock Loss = Scissors
+expectedShape Paper Loss = Rock
+expectedShape Scissors Loss = Paper
+expectedShape shape Draw = shape
+
+parseLine :: String -> Maybe (OpponentShape, ExpectedOutcome)
+parseLine [os, ' ', eo] = (,) <$> charToShape os <*> charToOutcome eo
 parseLine _ = Nothing
 
-parseFile :: [String] -> Maybe [(PlayerShape, OpponentShape)]
-parseFile = mapM parseLine 
+parseFile :: [String] -> Maybe [(OpponentShape, ExpectedOutcome)]
+parseFile = mapM parseLine
 
-playRound :: (PlayerShape, OpponentShape) -> PlayerScore
-playRound (ps, os) = pointsFromOutcome (roundOutcome ps os) + pointsForShape ps
+playRound :: (OpponentShape, ExpectedOutcome) -> PlayerScore
+playRound (os, eo) = pointsFromOutcome eo + pointsForShape (expectedShape os eo)
 
 main :: IO ()
 main = do
   content <- readFile "input.txt"
   let rounds = parseFile $ lines content
-  let finalScore = fmap (foldr (\ r a -> playRound r + a) 0) rounds 
+  let finalScore = fmap (foldr (\r a -> playRound r + a) 0) rounds
   print finalScore
