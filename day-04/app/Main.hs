@@ -1,30 +1,32 @@
-module Main where
+module Main
+  ( main,
+  )
+where
 
-import System.IO
-import Data.List (isSubsequenceOf)
+import Data.List (intersect)
 import Data.List.Split (splitOn)
+import System.IO
 
 type SectionID = Int
 
-fullyContains :: (Eq a) => ([a], [a]) -> Bool
-fullyContains (a, b) = isSubsequenceOf a b || isSubsequenceOf b a
+overlaps :: (Eq a) => ([a], [a]) -> Bool
+overlaps (a, b) = (not . null) $ intersect a b
 
 parseSection :: String -> [SectionID]
-parseSection s = 
+parseSection s =
   let [s1, s2] = splitOn "-" s
-  in [read s1 .. read s2] --unsafe read
+   in [read s1 .. read s2] -- unsafe read
 
 parseLine :: String -> ([SectionID], [SectionID])
-parseLine l = 
+parseLine l =
   let [p1, p2] = splitOn "," l
-  in (parseSection p1, parseSection p2)
+   in (parseSection p1, parseSection p2)
 
-part1 :: (Eq a) => [([a], [a])] -> Int
-part1 x = length $ filter fullyContains x
+part2 :: (Eq a) => [([a], [a])] -> Int
+part2 x = length $ filter overlaps x
 
 main :: IO ()
 main = do
   content <- lines <$> readFile "input.txt"
   let sections = mapM parseLine content
-  print (part1 $ map parseLine content) 
-
+  print (part2 $ map parseLine content)
