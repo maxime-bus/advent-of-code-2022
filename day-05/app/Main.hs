@@ -3,7 +3,7 @@ module Main
   )
 where
 
-import Data.Char (isDigit)
+import Data.Char (isDigit, isSpace)
 import Data.Either (isLeft)
 import Data.Stack
 import Text.Parsec
@@ -38,5 +38,6 @@ main :: IO ()
 main = do
   content <- lines <$> readFile "input.txt"
   let cratesConfig = takeWhile (not . isDigit . (!! 1)) content
-  let c = mapM (parse crates "") cratesConfig
-  print $ fmap invert c
+  case map (stackFromList . filter (not . isSpace)) . invert <$> mapM (parse crates "") cratesConfig of
+    Right stacks -> print stacks
+    Left error -> print error
