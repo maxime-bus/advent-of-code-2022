@@ -31,12 +31,12 @@ crate = (char '[' *> letter <* char ']') <|> noCrate
 crates :: Parsec String () String
 crates = sepBy crate space
 
--- invert :: [[a]] -> [[a]]
--- invert l = foldr (zipWith (:)) (replicate (length (head l)) []) l
+invert :: [[a]] -> [[a]]
+invert l = foldr (zipWith (:)) (replicate (length (head l)) []) l
 
 main :: IO ()
 main = do
   content <- lines <$> readFile "input.txt"
   let cratesConfig = takeWhile (not . isDigit . (!! 1)) content
-  let crates = parse crates "" (head cratesConfig)
-  print "toto"
+  let c = mapM (parse crates "") cratesConfig
+  print $ fmap invert c
