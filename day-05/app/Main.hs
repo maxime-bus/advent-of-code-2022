@@ -11,7 +11,7 @@ import Data.Maybe (fromMaybe)
 moveCrates :: Int -> String -> String -> (String, String)
 moveCrates _ [] t = ([], t)
 moveCrates 0 source target = (source, target)
-moveCrates n (s:source) target = moveCrates (n-1) source (s:target)
+moveCrates n source target = (drop n source, take n source ++ target)
 
 part1 :: [[Int]] -> [String] -> String
 part1 [] stacks = map head stacks
