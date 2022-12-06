@@ -3,41 +3,34 @@ module Main
   )
 where
 
-import Data.Char (isDigit, isSpace)
-import Data.Either (isLeft)
-import Data.Stack
-import Text.Parsec
+import Control.Lens
+import Data.Char (isAlpha, isDigit, isSpace)
+import Data.List (transpose)
+import Data.Maybe (fromMaybe)
 
-type SourceStack = Stack
+moveCrates :: Int -> String -> String -> (String, String)
+moveCrates _ [] t = ([], t)
+moveCrates 0 source target = (source, target)
+moveCrates n (s:source) target = moveCrates (n-1) source (s:target)
 
-type TargetStack = Stack
+part1 :: [[Int]] -> [String] -> String
+part1 [] stacks = map head stacks
+part1 (action : actions) stacks =
+  let [m, f, t] = action
+      source = stacks ^. element (f - 1)
+      target = stacks ^. element (t - 1)
+      (source', target') = moveCrates m source target
+      stacks' = (element (t - 1) .~ target') $ (element (f - 1) .~ source') stacks
+   in part1 actions stacks'
 
-stackFromList :: [a] -> Stack a
-stackFromList l = foldl stackPush stackNew (reverse l)
+stacks c = map (dropWhile isSpace) $ filter (any isAlpha) $ transpose $ init $ takeWhile (not . null) c
 
-moveCrates :: Int -> SourceStack a -> TargetStack a -> (SourceStack a, TargetStack a)
-moveCrates 0 sourceStack targetStack = (sourceStack, targetStack)
-moveCrates n sourceStack targetStack =
-  case stackPop sourceStack of
-    Just (sourceStack', movedCrate) -> moveCrates (n - 1) sourceStack' (stackPush targetStack movedCrate)
-    Nothing -> (sourceStack, targetStack)
+craneActions :: [String] -> [[Int]]
+craneActions c = map ((map read . filter (all isDigit)) . words) (tail $ dropWhile (not . null) c)
 
-noCrate :: Parsec String () Char
-noCrate = char ' ' *> char ' ' <* char ' '
-
-crate :: Parsec String () Char
-crate = (char '[' *> letter <* char ']') <|> noCrate
-
-crates :: Parsec String () String
-crates = sepBy crate space
-
-invert :: [[a]] -> [[a]]
-invert l = foldr (zipWith (:)) (replicate (length (head l)) []) l
+content = lines <$> readFile "input.txt"
 
 main :: IO ()
 main = do
-  content <- lines <$> readFile "input.txt"
-  let cratesConfig = takeWhile (not . isDigit . (!! 1)) content
-  case map (stackFromList . filter (not . isSpace)) . invert <$> mapM (parse crates "") cratesConfig of
-    Right stacks -> print stacks
-    Left error -> print error
+  c <- content
+  print $ part1 (craneActions c) (stacks c)
