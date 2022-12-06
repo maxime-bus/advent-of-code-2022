@@ -15,7 +15,11 @@ hasDuplicates (x:xs)
 part1 :: String -> Int
 part1 s = (+4) $ length $ takeWhile (== True) $ map hasDuplicates $ slidingWindow 4 s
  
+part2 :: String -> Int
+part2 s = (+14) $ length $ takeWhile (== True) $ map hasDuplicates $ slidingWindow 14 s
+
 main :: IO ()
 main = do
   content <- readFile "input.txt"
   print $ part1 content
+  print $ part2 content
