@@ -1,51 +1,30 @@
 module Main where
 
-import Data.Monoid
-import Data.Foldable
-import Control.Applicative
+import Test.Hspec
 
-data FileSystem a = File String a | Folder String [FileSystem a] deriving (Show)
+data FileSystem = File String Int | Directory String [FileSystem] deriving (Show, Eq)
 
-isFolder :: FileSystem a -> Bool
-isFolder (Folder _ _ ) = True
-isFolder _ = False
+tests = hspec $ do
+  describe "Filesystem manipulation" $ do
+    it "can add file to folder" $ do
+      File "foo" 1 `addTo` Directory "dir" [] `shouldBe` Directory "dir" [File "foo" 1]
 
-instance Functor FileSystem where
-  fmap f (File n s) = File n (f s)
-  fmap f (Folder n fs) = Folder n (map (fmap f) fs)
+    it "can add directory to another directory" $ do
+      Directory "dir1" [] `addTo` Directory "dir2" [] `shouldBe` Directory "dir2" [Directory "dir1" []]
 
-instance Foldable FileSystem where
-  foldMap f (File _ s) = f s
-  foldMap f (Folder _ fs) = fold (fmap (foldMap f) fs)
+addTo :: FileSystem -> FileSystem -> FileSystem
+addTo f@(File _ _) d@(Directory dn fs) = Directory dn (f:fs)
+addTo d1@(Directory d1n d1fs) d2@(Directory d2n d2fs) = Directory d2n (d1:d2fs)
 
-example :: FileSystem Int
-example =
-  Folder
-    "/"
-    [ Folder
-        "a"
-        [ Folder
-            "e"
-            [ File "i" 584
-            ],
-          File "f" 29116,
-          File "g" 2557,
-          File "h.lst" 62596
-        ],
-      File "b.txt" 14848514,
-      File "c.dat" 8504156,
-      Folder
-        "d"
-        [ File "j" 4060174,
-          File "d.log" 8033020,
-          File "d.ext" 5626152,
-          File "k" 7214296
-        ]
-    ]
+
+
+fsSize :: FileSystem -> Int
+fsSize (File _ s) = s
+fsSize (Directory _ fs) = sum (map fsSize fs)
 
 content :: IO [String]
 content = lines <$> readFile "input.txt"
 
 main :: IO ()
 main = do
-  print $ "Example : " ++ show (getSum $ foldMap Sum example)
+  putStrLn "foo"
